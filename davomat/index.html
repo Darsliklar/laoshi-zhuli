@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#009758">
+<title>Davomat · Laoshi Zhuli</title>
+<link rel="icon" href="../shared/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/core.css">
+<style>
+#att-pres{position:fixed;inset:0;z-index:150;background:#FBFAF6;display:flex;flex-direction:column}
+#att-pres .ap-top{display:flex;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#att-pres .ap-top b{font-family:var(--serif);font-size:20px}
+#att-pres .ap-main{flex:1;display:flex;gap:28px;padding:18px 24px;align-items:center;justify-content:center;min-height:0}
+#att-pres .ap-qr{display:flex;flex-direction:column;align-items:center;gap:10px}
+#att-pres #ap-qr{width:min(72vh,58vw);height:min(72vh,58vw);background:#fff;border-radius:16px;padding:10px;box-shadow:var(--shadow)}
+#att-pres #ap-qr svg{width:100%;height:100%;display:block}
+#att-pres .ap-bar{width:min(72vh,58vw);height:6px;background:#EEF0F2;border-radius:99px;overflow:hidden}
+#att-pres .ap-bar i{display:block;height:100%;background:var(--brand);transition:width 1s linear}
+#att-pres .ap-scan{font-weight:600;font-size:18px}
+#att-pres .ap-side{width:min(360px,32vw);align-self:stretch;overflow:auto}
+#att-pres .ap-count b{font-family:var(--serif);font-size:72px;color:var(--brand);line-height:1}
+#att-pres .ap-count{font-size:28px;font-weight:700}
+#att-pres .ap-item{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px}
+#att-pres .ap-item span:first-child{flex:1;font-weight:600}
+@media(max-width:800px){#att-pres .ap-main{flex-direction:column;overflow:auto}#att-pres #ap-qr,#att-pres .ap-bar{width:86vw;height:auto}#att-pres #ap-qr{height:86vw}#att-pres .ap-side{width:100%}}
+</style>
+</head>
+<body>
+<div class="ci-bg"></div>
+<div class="wrap" id="app"><p class="muted center" style="margin-top:40px">…</p></div>
+<script src="../shared/i18n.js"></script>
+<script src="../config.js"></script>
+<script src="../shared/vendor/firebase-app-compat.js"></script>
+<script src="../shared/vendor/firebase-auth-compat.js"></script>
+<script src="../shared/vendor/firebase-database-compat.js"></script>
+<script src="../shared/vendor/qrcode.js"></script>
+<script src="../shared/app.js"></script>
+<script src="../shared/groups.js"></script>
+<script src="i18n.js"></script>
+<script src="att.js"></script>
+</body>
+</html>

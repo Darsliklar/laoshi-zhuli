@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#009758">
+<title>Laoshi Zhuli · 老师助理</title>
+<link rel="icon" href="shared/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/core.css">
+<style>
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 0 8px}
+.hero img{width:clamp(96px,22vw,150px);height:auto;filter:drop-shadow(0 6px 18px rgba(0,151,88,.18))}
+.hero h1{font-size:clamp(26px,5vw,40px);margin-top:14px;letter-spacing:.01em}
+.hero h1 span{color:var(--brand)}
+.hero p{color:var(--ink-soft);margin-top:4px;font-size:15px}
+.hero .inst{font-weight:600;color:var(--ink);margin-top:8px}
+.ptop{display:flex;justify-content:flex-end;padding:14px 0 0}
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:26px}
+.mod{position:relative;display:flex;flex-direction:column;gap:10px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:18px;
+  padding:20px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s;min-height:210px}
+.mod:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(33,42,51,.12);border-color:#cfccc3}
+.mod .ico{width:54px;height:54px;border-radius:14px;color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-weight:900;font-size:28px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.3)}
+.mod h2{margin:4px 0 0;font-size:20px}
+.mod p{color:var(--ink-soft);font-size:14px;flex:1}
+.mod .tags{display:flex;gap:6px;flex-wrap:wrap}
+.mod .go{position:absolute;right:18px;top:22px;font-size:20px;color:var(--ink-soft);transition:transform .15s}
+.mod:hover .go{transform:translateX(3px);color:var(--ink)}
+.stud{margin-top:22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.85)}
+.stud .t{flex:1;min-width:220px}
+</style>
+</head>
+<body>
+<div class="ci-bg"></div>
+<div class="wrap" id="app"></div>
+
+<script src="shared/i18n.js"></script>
+<script src="config.js"></script>
+<script src="shared/app.js"></script>
+<script src="shared/modules.js"></script>
+<script>
+function render(){
+  const t = CI.t, esc = CI.esc;
+  document.title = t('app.name') + ' · ' + t('inst.name');
+  CI.$('#app').innerHTML = `
+    <div class="ptop">${CI.langSwitcher()}</div>
+    <section class="hero">
+      <img src="shared/logo.svg" alt="${esc(t('inst.name'))}">
+      <h1>Laoshi Zhuli · <span>老师助理</span></h1>
+      <p>${t('app.tagline')}</p>
+      <div class="inst">${esc(t('inst.name'))}</div>
+    </section>
+    <h3 class="center muted" style="font-family:var(--sans);font-weight:600;margin-top:18px">${t('portal.pick')}</h3>
+    <div class="mods">
+      ${CI_MODULES.map(m => `<a class="mod" href="${m.path}">
+        <div class="ico" style="background:${m.color}">${m.icon}</div>
+        <span class="go">→</span>
+        <h2>${t('mod.'+m.id+'.t')}</h2>
+        <p>${t('mod.'+m.id+'.d')}</p>
+        <div class="tags">${(m.tags||[]).map(g => CI.pill('p-gray', t('tag.'+g))).join('')}</div>
+      </a>`).join('')}
+    </div>
+    <div class="card stud">
+      <div style="font-size:30px">🎒</div>
+      <div class="t"><b>${t('portal.student')}</b><div class="muted">${t('portal.studentText')}</div></div>
+      <a class="btn btn-brand" href="laoshi/?portal">${t('portal.studentBtn')}</a>
+    </div>
+    <footer class="ci-foot">© ${new Date().getFullYear()} ${esc(t('inst.name'))} · Laoshi Zhuli ·
+      <a href="https://github.com/Darsliklar/laoshi-zhuli" target="_blank" rel="noopener">GitHub</a></footer>`;
+}
+render();
+document.addEventListener('ci:lang', render);
+if('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>

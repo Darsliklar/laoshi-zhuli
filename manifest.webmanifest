@@ -1,0 +1,12 @@
+{
+  "name": "Laoshi Zhuli · 老师助理",
+  "short_name": "Laoshi Zhuli",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6F5F1",
+  "theme_color": "#009758",
+  "icons": [
+    { "src": "shared/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
