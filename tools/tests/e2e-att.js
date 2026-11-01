@@ -17,7 +17,7 @@ const log = (...a) => console.log('▶', ...a);
   await tp.fill('#g-name', 'HSK1-A'); await tp.click('text=Guruh yaratish');
   await tp.waitForSelector('textarea[id^=gs-]');
   await tp.fill('textarea[id^=gs-]', 'Aziza Karimova\nWang Fang\nBobur Aliyev'); await tp.click('text=Qo\'shish va kod berish');
-  await tp.waitForFunction(() => document.querySelectorAll('b.code').length >= 3, null, {timeout: 20000});
+  await tp.waitForFunction(() => document.querySelectorAll('b.code').length >= 3, null, {timeout: 20000}).catch(async e => { console.log('BODY', (await tp.textContent('#att-body')).replace(/\s+/g,' ').slice(0,400)); throw e; });
   await tp.screenshot({ path: '/tmp/a-groups.png', fullPage: true });
   const info = await tp.evaluate(async () => { const gid = Object.keys(CI.G.groups)[0]; const st = (await CI.db.ref('groupStudents/'+gid).once('value')).val(); return { gid, st }; });
   const studs = Object.entries(info.st); log('students', studs.map(([k,v]) => v.name + ':' + v.code).join(', '));
@@ -37,7 +37,8 @@ const log = (...a) => console.log('▶', ...a);
   await sp.fill('#s-code', 'ZZZZZZ'); await sp.click('#s-go'); await sp.waitForSelector('.note.red'); log('bad code msg:', await sp.textContent('.note.red'));
   await sp.fill('#s-code', studs[0][1].code.toLowerCase()); await sp.click('#s-go'); await sp.waitForSelector('#s-yes');
   log('isYou:', await sp.textContent('h2')); await sp.click('#s-yes'); await sp.waitForSelector('text=Belgilandingiz');
-  await sp.screenshot({ path: '/tmp/a-student.png' });
+  await sp.screenshot({ path: '/tmp/a-student.png' }); await sp.waitForTimeout(400);
+  log('student connected after check-in:', await sp.evaluate(() => new Promise(r => CI.db.ref('.info/connected').once('value', s => r(s.val())))));
   // shu telefondan yana: allaqachon
   await sp.goto(url); await sp.waitForSelector('h2'); log('repeat:', await sp.textContent('h2'));
   // --- o'quvchi 2: eskirgan token
@@ -45,7 +46,7 @@ const log = (...a) => console.log('▶', ...a);
   await s2.goto(BASE + 'davomat/?g=' + info.gid + '&k=' + k + '&t=WRONGTOK'); await s2.waitForTimeout(1500);
   log('stale token:', (await s2.textContent('.card')).trim().slice(0,90));
   // --- qo'lda yozib ko'rish: o'quvchi boshqa o'quvchi uchun yozolmasligi
-  const hack = await sp.evaluate(async ([g,k,sid]) => { try{ await CI.db.ref('attendance/'+g+'/'+k+'/rec/'+sid).set({st:'p',at:firebase.database.ServerValue.TIMESTAMP,via:'qr',n:'X',h:'abc',tk:'abc'}); return 'WRITE OK (BAD)'; }catch(e){ return 'denied ✓'; } }, [info.gid, k, studs[1][0]]);
+  const hack = await sp.evaluate(async ([g,k,sid]) => { CI.db.goOnline(); try{ await CI.db.ref('attendance/'+g+'/'+k+'/rec/'+sid).set({st:'p',at:firebase.database.ServerValue.TIMESTAMP,via:'qr',n:'X',h:'abc',tk:'abc'}); return 'WRITE OK (BAD)'; }catch(e){ return 'denied ✓'; } }, [info.gid, k, studs[1][0]]);
   log('forge other student:', hack);
   const hack2 = await sp.evaluate(async ([g]) => { try{ await CI.db.ref('groupStudents/'+g).once('value'); return 'READ OK (BAD)'; }catch(e){ return 'denied ✓'; } }, [info.gid]);
   log('read codes anonymously:', hack2);

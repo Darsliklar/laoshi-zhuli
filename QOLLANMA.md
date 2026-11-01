@@ -264,6 +264,12 @@ Qoidalarni o'zgartirish: `tools/build-rules.py` va `tools/rules-laoshi.py` → `
 
 ## 15. Ko'p so'raladigan savollar
 
+**Firebase bepul rejasi yetadimi?** 7–8 laoshi va ~200 o'quvchi uchun saqlash (1 GB) va trafik (oyiga 10 GB) bemalol yetadi.
+Asosiy cheklov — **bir vaqtda 100 ta ulanish** (har bir ochiq varaq = 1 ulanish). Sayt buni tejaydi: o'quvchi davomatga belgilangach,
+testni yuborib natijasini ko'rgach yoki portalda ro'yxatni ochgach, uning sahifasi bazadan avtomatik uziladi. Bir nechta guruh bir vaqtda
+katta imtihon topshiradigan bo'lsa, loyihani **Blaze** rejasiga o'tkazing (bepul limitlar o'sha-o'sha, ulanishlar 200 000 gacha;
+bu hajmda to'lov amalda 0). Google Cloud'da byudjet ogohlantirishini qo'yib qo'ying. Holatni Realtime Database → **Usage** da kuzatasiz.
+
 **"Ruxsat yo'q (Database Rules)" xatosi.** `database.rules.json` Firebase'ga joylanmagan yoki eski. 2-bo'lim, 3-qadam.
 
 **Kirishda "auth/unauthorized-domain".** Firebase → Authentication → Settings → Authorized domains ga `…github.io` ni qo'shing.

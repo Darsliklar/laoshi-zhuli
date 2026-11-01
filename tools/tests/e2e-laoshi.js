@@ -66,13 +66,14 @@ const log = (...a) => console.log('▶', ...a);
   await sp.fill('#u-pin', pin); await sp.click('button:has-text("Blokdan chiqish")'); await sp.waitForSelector('.q-card'); log('unlocked with PIN ✓');
   await sp.click('button:has-text("Yakunlash va yuborish")'); await sp.click('.modal button.btn-p'); await sp.waitForTimeout(3000);
   await sp.screenshot({ path: '/tmp/l-result.png', fullPage: true });
+  await sp.waitForTimeout(500); log('student connected after result:', await sp.evaluate(() => new Promise(r => CI.db.ref('.info/connected').once('value', s => r(s.val())))));
   log('student result screen:', (await sp.textContent('.card')).replace(/\s+/g,' ').slice(0, 160));
   await tp.waitForTimeout(1500);
   await tp.screenshot({ path: '/tmp/l-live.png', fullPage: true });
   // portal
   const P = await b.newContext({ viewport: { width: 400, height: 820 } }); const pp = await P.newPage();
   await pp.goto(BASE + 'laoshi/?portal'); await pp.fill('#p-code', studs[1][1].code); await pp.click('#p-go'); await pp.waitForTimeout(2000);
-  await pp.screenshot({ path: '/tmp/l-portal.png', fullPage: true }); log('portal:', (await pp.textContent('#p-list')).replace(/\s+/g,' ').slice(0, 140));
+  await pp.screenshot({ path: '/tmp/l-portal.png', fullPage: true }); log('portal connected after list:', await pp.evaluate(() => new Promise(r => CI.db.ref('.info/connected').once('value', s => r(s.val()))))); log('portal:', (await pp.textContent('#p-list')).replace(/\s+/g,' ').slice(0, 140));
   // tillar
   for(const l of ['ru','en','zh']){ await tp.click(`.ci-lang button:has-text("${l==='zh'?'中文':l.toUpperCase()}")`); await tp.waitForTimeout(250); }
   await tp.evaluate(() => L.go('editor', Object.keys(L.tests)[0])); await tp.waitForTimeout(1200); await tp.screenshot({ path: '/tmp/l-editor-zh.png', fullPage: true });

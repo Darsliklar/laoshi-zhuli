@@ -371,7 +371,9 @@ function studentPage(){
       <div class="flex"><img src="../shared/logo.svg" width="36" height="36" alt=""><b style="font-family:var(--serif)">${t('s.title')}</b></div>${CI.langSwitcher()}</div>
       <div class="card narrow" style="max-width:440px">${inner}</div>`;
   };
-  const fail = (msg) => S(`<div class="center"><div style="font-size:52px">⚠️</div><p style="font-size:16px">${msg}</p></div>`);
+  /* Ish tugagach bazadan uziladi: Firebase bepul rejasida bir vaqtdagi ulanishlar soni cheklangan (100) */
+  const release = () => { try{ CI.db.goOffline(); }catch(e){} };
+  const fail = (msg) => { S(`<div class="center"><div style="font-size:52px">⚠️</div><p style="font-size:16px">${msg}</p></div>`); release(); };
   const stName = st => t('a.st.' + st);
   document.addEventListener('ci:lang', () => render());
   let last = null; const render = () => last && last();
@@ -440,7 +442,7 @@ function studentPage(){
     }
   }
   function done(r, already){
-    last = () => done(r, already);
+    last = () => done(r, already); release();
     const ok = r.st === 'p' || r.st === 'l';
     S(`<div class="center"><div style="font-size:72px;line-height:1;color:${ST_FG[r.st]||'inherit'}">${ok?'✓':'•'}</div>
       <h2 style="justify-content:center;margin-top:10px">${already ? esc(t('s.already',{st:stName(r.st)})) : r.st==='l' ? t('s.okLate') : t('s.ok')}</h2>

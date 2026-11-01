@@ -12,6 +12,10 @@ let srvOff = 0;        // server vaqti farqi
 const app = () => L.app;
 const now = () => Date.now() + srvOff;
 const codeKey = gid => 'ci.code.' + gid;
+/* Firebase bepul rejasida bir vaqtdagi ulanishlar soni cheklangan (100). O'quvchi ishini tugatgach sahifa bazadan uziladi,
+   kerak bo'lsa (qayta urinish, portal) yana ulanadi. */
+const online = () => { try{ CI.db.goOnline(); }catch(e){} };
+const offline = () => { try{ CI.db.goOffline(); }catch(e){} };
 
 function page(inner, sub){
   app().innerHTML = `<div class="ptop" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;gap:8px">
@@ -302,7 +306,7 @@ S.submit = async () => {
 async function finish(timeout){
   if(R.finished) return; R.finished = true;
   Object.keys(txtT).forEach(id => { clearTimeout(txtT[id]); });
-  if(R.preview){ cleanup(); return previewResult(); }
+  if(R.preview){ cleanup(); offline(); return previewResult(); }
   page(`<div class="card center"><p class="muted">${t('st.sending')}</p></div>`);
   try{
     const up = {}; R.order.forEach(id => { if(R.answers[id] && R.answers[id].text != null) up['answers/' + id] = R.answers[id]; });
@@ -324,10 +328,11 @@ async function showResult(){
   }
   if(!res){ try{ res = (await CI.db.ref('results/' + R.tid + '/' + R.sid).once('value')).val(); }catch(e){ hidden = true; } }
   renderResult(res, hidden, key);
-  if(!res && !hidden){   // laoshi baholaguncha kutish
+  if(!res && !hidden){   // laoshi baholaguncha kutish (3 daqiqa), keyin ulanishni bo'shatamiz — "Yangilash" tugmasi qoladi
     R.resRef = CI.db.ref('results/' + R.tid + '/' + R.sid);
-    R.resRef.on('value', s => { const v = s.val(); if(v){ R.resRef.off(); renderResult(v, false, null); } }, () => {});
-  }
+    R.resRef.on('value', s => { const v = s.val(); if(v){ R.resRef.off(); clearTimeout(R.resT); renderResult(v, false, null); offline(); } }, () => {});
+    R.resT = setTimeout(() => { if(R && R.resRef) R.resRef.off(); offline(); }, 3*60000);
+  } else offline();
 }
 function renderResult(res, hidden, key){
   S._redraw = () => renderResult(res, hidden, key);
@@ -335,7 +340,8 @@ function renderResult(res, hidden, key){
   const canRetry = !x.groupId ? (s.attempts === 0 || (+(CI.ls.get('l.att.' + R.tid)||1)) < s.attempts) : (s.attempts === 0 || (R.ses.attempt||1) < s.attempts);
   let body = '';
   if(hidden || (res && res.hidden)) body = `<div style="font-size:56px">📨</div><h2 style="justify-content:center">${t('st.sent')}</h2><p class="muted">${t('st.hiddenScore')}</p>`;
-  else if(!res) body = `<div style="font-size:56px">📨</div><h2 style="justify-content:center">${t('st.sent')}</h2><p class="muted">${t('st.pending')}</p>`;
+  else if(!res) body = `<div style="font-size:56px">📨</div><h2 style="justify-content:center">${t('st.sent')}</h2><p class="muted">${t('st.pending')}</p>
+    <button class="btn-ghost btn-sm mt" onclick="location.reload()">🔄 ${t('st.refresh')}</button>`;
   else {
     const pass = res.percent >= 56;
     body = `<div class="stamp ${pass?'pass':''}"><b>${esc(res.grade ?? Math.round(res.percent))}</b><span>${res.grade != null ? t('st.grade') : '%'}</span></div>
@@ -366,7 +372,7 @@ function previewResult(){
     <p class="muted">${t('st.answered', {a: R.order.filter(id => hasAns(R.answers[id])).length, n: R.order.length})}</p>
     <button class="btn-ghost mt" onclick="location.reload()">↺ ${t('st.retry')}</button></div>`);
 }
-S.retry = () => { CI.ls.del('l.sid.' + R.tid); const tid = R.tid; R = null; S.open(tid); };
+S.retry = () => { CI.ls.del('l.sid.' + R.tid); const tid = R.tid; R = null; online(); S.open(tid); };
 
 /* ======================================================================= GURUH PORTALI */
 S.portal = async gid => {
@@ -385,6 +391,7 @@ S.portal = async gid => {
   };
   async function enter(code){
     code = String(code||'').trim().toUpperCase(); if(code.length < 4) return draw(t('st.e.code'));
+    online();
     try{
       let g = gid;
       if(!g){ const c = (await CI.db.ref('codes/' + (await CI.sha('code:' + code))).once('value')).val(); g = c && c.g; }
@@ -412,7 +419,8 @@ S.portal = async gid => {
         <p class="center muted"><a href="#" onclick="CI.ls.del('${codeKey(g)}');CI.ls.del('ci.lastCode');location.reload();return false">${t('pt.logout')}</a></p>`;
       // Shu qurilmada test davom ettirilganda to'g'ri sessiya topilishi uchun
       rows.forEach(o => { if(o.last && o.last.status !== 'done') CI.ls.set('l.sid.' + o.tid, r.s + '-' + o.n); });
-    }catch(e){ draw(CI.errMsg(e)); }
+      offline();
+    }catch(e){ draw(CI.errMsg(e)); offline(); }
   }
   draw();
 };

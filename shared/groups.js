@@ -215,6 +215,9 @@ G.renderManager = el => {
 };
 function draw(){
   if(!host || !document.body.contains(host)) return;
+  // Qayta chizishda yozilayotgan matn yo'qolmasligi uchun maydonlar qiymatini saqlab qolamiz
+  const keep = {}; host.querySelectorAll('textarea[id^="gs-"], #g-name').forEach(el => { if(el.value) keep[el.id] = el.value; });
+  const focused = document.activeElement && document.activeElement.id;
   const list = G.mine(showArch).filter(([id,g]) => !q || String(g.name).toLowerCase().includes(q) ||
     Object.values(G.students[id]||{}).some(s => String(s.name).toLowerCase().includes(q)));
   host.innerHTML = `
@@ -227,6 +230,8 @@ function draw(){
     ${!G.loaded ? `<p class="muted">${t('c.loading')}</p>` : G.err ? `<div class="note red">${CI.errMsg(G.err)}</div>` :
       !list.length ? `<div class="card"><div class="empty"><span class="ico">👥</span>${t('g.none')}</div></div>` :
       list.map(([gid,g]) => groupCard(gid, g)).join('')}`;
+  Object.entries(keep).forEach(([id, v]) => { const el = document.getElementById(id); if(el) el.value = v; });
+  if(focused && keep[focused] != null){ const el = document.getElementById(focused); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   const nameIn = CI.$('#g-name'); if(nameIn) nameIn.addEventListener('keydown', e => { if(e.key === 'Enter') G.uiCreate(); });
   if(G.open && G.groups[G.open]) G.listenStudents(G.open, draw);
 }
@@ -274,9 +279,9 @@ G.uiSearch = v => { q = v.trim().toLowerCase(); draw(); const i = CI.$('#g-q'); 
   if(q) G.mine(showArch).forEach(([id]) => { if(!G.students[id]) G.listenStudents(id, draw); }); };
 G.uiArch = v => { showArch = v; draw(); };
 G.uiToggle = gid => { G.open = G.open === gid ? null : gid; draw(); };
-G.uiCreate = () => { const v = CI.$('#g-name').value; G.create(v).then(gid => { G.open = gid; draw(); CI.toast(t('c.saved'), 'ok'); }, e => CI.toast(e.message, 'err')); };
+G.uiCreate = () => { const v = CI.$('#g-name').value; G.create(v).then(gid => { G.open = gid; const i = CI.$('#g-name'); if(i) i.value = ''; draw(); CI.toast(t('c.saved'), 'ok'); }, e => CI.toast(e.message, 'err')); };
 G.uiAdd = gid => { const v = CI.$('#gs-'+gid).value.split('\n');
-  G.addStudents(gid, v).then(n => { CI.toast(t('g.added',{n}), 'ok'); }, e => CI.toast(CI.errMsg(e), 'err')); };
+  G.addStudents(gid, v).then(n => { const ta = CI.$('#gs-'+gid); if(ta) ta.value = ''; CI.toast(t('g.added',{n}), 'ok'); }, e => CI.toast(CI.errMsg(e), 'err')); };
 G.uiRename = async gid => { const v = await CI.prompt(t('c.rename'), G.groups[gid].name); if(v && v.trim().length >= 2) G.setField(gid, 'name', v.trim()); };
 G.uiNote = async gid => { const v = await CI.prompt(t('g.note'), G.groups[gid].note || ''); if(v != null) G.setField(gid, 'note', v.trim()); };
 G.uiRenameSt = async (gid, sid) => { const v = await CI.prompt(t('g.renameStudent'), G.students[gid][sid].name); if(v) G.renameStudent(gid, sid, v).catch(e => CI.toast(CI.errMsg(e),'err')); };
