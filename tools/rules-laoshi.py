@@ -40,8 +40,8 @@ LAOSHI_RULES = {
     ".read": True,
     ".indexOn": ["ownerUid", "groupId", "shared", "sourceId"],
     "$tid": {
-      ".write": f"{T} && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && (data.child('ownerUid').val() === auth.uid || {ADM})))",
-      ".validate": "newData.hasChildren(['title', 'ownerUid']) && newData.child('title').isString() && newData.child('title').val().length <= 200"
+      ".write": f"{T} && ((!data.exists() && (newData.child('ownerUid').val() === auth.uid || {ADM})) || (data.exists() && (data.child('ownerUid').val() === auth.uid || {ADM})))",
+      ".validate": "newData.hasChildren(['title', 'ownerUid']) && newData.child('title').isString() && newData.child('title').val().length <= 300"
     }
   },
   "testKeys": {
@@ -84,7 +84,7 @@ LAOSHI_RULES = {
     ".indexOn": ["ownerUid", "hsk"],
     "$wid": {
       ".write": f"{T} && (!data.exists() || data.child('ownerUid').val() === auth.uid || {ADM})",
-      ".validate": "newData.child('hanzi').isString() && newData.child('hanzi').val().length > 0 && newData.child('hanzi').val().length <= 24"
+      ".validate": "newData.child('hanzi').isString() && newData.child('hanzi').val().length > 0 && newData.child('hanzi').val().length <= 64"
     }
   }
 }

@@ -85,8 +85,9 @@ rules = {
       ".read": T,
       ".indexOn": ["ownerUid"],
       "$gid": {
-        ".write": f"{T} && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && (data.child('ownerUid').val() === auth.uid || {ADM})))",
-        ".validate": "newData.hasChildren(['name', 'ownerUid']) && newData.child('name').isString() && newData.child('name').val().length <= 120",
+        # admin boshqa laoshi nomiga ham yaratadi (eski bazadan ko'chirishda kerak)
+        ".write": f"{T} && ((!data.exists() && (newData.child('ownerUid').val() === auth.uid || {ADM})) || (data.exists() && (data.child('ownerUid').val() === auth.uid || {ADM})))",
+        ".validate": "newData.hasChildren(['name', 'ownerUid']) && newData.child('name').isString() && newData.child('name').val().length <= 200",
         # hamkor laoshilar nom/izoh/arxivni o'zgartira oladi (egasi va hamkorlar ro'yxatini emas)
         "name": { ".write": MG("$gid") },
         "note": { ".write": MG("$gid") },

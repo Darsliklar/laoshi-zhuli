@@ -48,8 +48,8 @@
         "ownerUid"
       ],
       "$gid": {
-        ".write": "(auth != null && root.child('teachers').child(auth.uid).exists() && root.child('teachers').child(auth.uid).child('active').val() !== false) && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && (data.child('ownerUid').val() === auth.uid || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false))))",
-        ".validate": "newData.hasChildren(['name', 'ownerUid']) && newData.child('name').isString() && newData.child('name').val().length <= 120",
+        ".write": "(auth != null && root.child('teachers').child(auth.uid).exists() && root.child('teachers').child(auth.uid).child('active').val() !== false) && ((!data.exists() && (newData.child('ownerUid').val() === auth.uid || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false))) || (data.exists() && (data.child('ownerUid').val() === auth.uid || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false))))",
+        ".validate": "newData.hasChildren(['name', 'ownerUid']) && newData.child('name').isString() && newData.child('name').val().length <= 200",
         "name": {
           ".write": "((auth != null && root.child('teachers').child(auth.uid).exists() && root.child('teachers').child(auth.uid).child('active').val() !== false) && (root.child('groups').child($gid).child('ownerUid').val() === auth.uid || root.child('groups').child($gid).child('members').child(auth.uid).val() === true || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false)))"
         },
@@ -131,8 +131,8 @@
         "sourceId"
       ],
       "$tid": {
-        ".write": "(auth != null && root.child('teachers').child(auth.uid).exists() && root.child('teachers').child(auth.uid).child('active').val() !== false) && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && (data.child('ownerUid').val() === auth.uid || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false))))",
-        ".validate": "newData.hasChildren(['title', 'ownerUid']) && newData.child('title').isString() && newData.child('title').val().length <= 200"
+        ".write": "(auth != null && root.child('teachers').child(auth.uid).exists() && root.child('teachers').child(auth.uid).child('active').val() !== false) && ((!data.exists() && (newData.child('ownerUid').val() === auth.uid || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false))) || (data.exists() && (data.child('ownerUid').val() === auth.uid || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false))))",
+        ".validate": "newData.hasChildren(['title', 'ownerUid']) && newData.child('title').isString() && newData.child('title').val().length <= 300"
       }
     },
     "testKeys": {
@@ -210,7 +210,7 @@
       ],
       "$wid": {
         ".write": "(auth != null && root.child('teachers').child(auth.uid).exists() && root.child('teachers').child(auth.uid).child('active').val() !== false) && (!data.exists() || data.child('ownerUid').val() === auth.uid || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false))",
-        ".validate": "newData.child('hanzi').isString() && newData.child('hanzi').val().length > 0 && newData.child('hanzi').val().length <= 24"
+        ".validate": "newData.child('hanzi').isString() && newData.child('hanzi').val().length > 0 && newData.child('hanzi').val().length <= 64"
       }
     }
   }

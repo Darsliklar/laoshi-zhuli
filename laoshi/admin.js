@@ -213,7 +213,7 @@ A.doImportOld = async () => {
       (x.questions || []).forEach((q, i) => { if(!q) return; const k = 'q' + String(i).padStart(3, '0'); order.push(k);
         qs[k] = { type: 'single', text: q.q || '', options: q.options || [], points: 1 }; keys[k] = q.correct != null ? { c: q.correct } : {}; });
       const [ou, on] = owner(x.ownerUid);
-      up['tests/' + id] = { title: x.title, ownerUid: ou, ownerName: on, createdAt: x.createdAt || Date.now(), status: x.closed ? 'closed' : 'open', startAt: x.startAt || null, endAt: x.endAt || null,
+      up['tests/' + id] = { title: String(x.title || id), ownerUid: ou, ownerName: on, createdAt: x.createdAt || Date.now(), status: x.closed ? 'closed' : 'open', startAt: x.startAt || null, endAt: x.endAt || null,
         shared: x.shared || null, order, questions: qs, settings: Object.assign({}, { timeLimit: x.timeLimit || 20, attempts: x.attemptLimit || 1, shuffleQ: !!x.shuffleQ, shuffleOpt: !!x.shuffleO,
           oneByOne: false, allowBack: true, onLeave: 'block', maxWarn: 0, unlockCode: true, fullscreen: false, noCopy: true, showScore: 'now', showAnswers: x.showMistakes ? 'now' : 'never', maxScore: 100,
           criteria: (x.criteria || []).map(c => ({ min: c.min, grade: c.label })) }) };
@@ -221,13 +221,14 @@ A.doImportOld = async () => {
     });
     // guruhlar
     for(const [oo, gs] of Object.entries(d.hanziGroups || {})) for(const [gid, g] of Object.entries(gs || {})){
+      if(!g) continue; g.name = String(g.name || gid);
       const [ou, on] = owner(g.ownerUid || oo);
       up['groups/' + gid] = { name: g.name, ownerUid: ou, ownerName: on, createdAt: g.createdAt || Date.now() }; up['roster/' + gid + '/_owner'] = ou; nG++;
       for(const [sid, s] of Object.entries(g.students || {})){ up['groupStudents/' + gid + '/' + sid] = { name: s.name, code: s.code, addedAt: s.addedAt || Date.now() };
         up['roster/' + gid + '/' + (await CI.codeHash(gid, s.code))] = { s: sid, n: s.name }; up['codes/' + (await CI.sha('code:' + String(s.code).toUpperCase()))] = { g: gid }; nS++; }
     }
     // so'zlar
-    Object.entries(d.hanziWords || {}).forEach(([wid, w]) => { const [ou, on] = owner(w.ownerUid); up['words/' + wid] = Object.assign({}, w, { ownerUid: ou, ownerName: on }); nW++; });
+    Object.entries(d.hanziWords || {}).forEach(([wid, w]) => { if(!w || !w.hanzi || String(w.hanzi).length > 64) return; const [ou, on] = owner(w.ownerUid); up['words/' + wid] = Object.assign({}, w, { ownerUid: ou, ownerName: on }); nW++; });
     // hanzi topshiriqlari → test
     Object.entries(d.hanziAssignments || {}).forEach(([aid, a]) => {
       const K = (d.hanziKeys || {})[aid] || {}; const qs = {}, keys = {}, order = Object.keys(a.items || {}).sort();
@@ -236,7 +237,7 @@ A.doImportOld = async () => {
         qs[k] = { type: it.type, charCount: it.charCount, target: it.target || null, prompt: Object.keys(prompt).length ? prompt : null, points: 1, wordId: it.wordId || null };
         keys[k] = { hanzi: kk.hanzi, pinyin: kk.pinyin, translation: kk.translation, accepted: kk.accepted || [] }; });
       const [ou, on] = owner(a.ownerUid);
-      up['tests/' + aid] = { title: a.title, desc: a.instructions || null, ownerUid: ou, ownerName: on, createdAt: a.createdAt || Date.now(), groupId: a.groupId || null,
+      up['tests/' + aid] = { title: String(a.title || aid), desc: a.instructions || null, ownerUid: ou, ownerName: on, createdAt: a.createdAt || Date.now(), groupId: a.groupId || null,
         status: a.status === 'published' ? 'open' : a.status === 'closed' ? 'closed' : 'draft', endAt: a.dueAt || null, order, questions: qs,
         settings: { timeLimit: 0, attempts: a.maxAttempts || 0, onLeave: 'off', unlockCode: false, oneByOne: true, allowBack: true, showScore: 'now', showAnswers: 'now', maxScore: a.maxScore || 10,
           requireTones: a.requireTones !== false, tolerance: a.tolerance ?? 3, grid: a.gridType || 'tian', hintAfter: a.allowHints ? 3 : 0, criteria: L.DEFAULT_CRITERIA, preset: 'hanzi' } };
@@ -247,13 +248,21 @@ A.doImportOld = async () => {
     // JSON orqali o'tkazib, bunday maydonlarni olib tashlaymiz. Juda katta bazani bo'laklab yozamiz.
     const clean = JSON.parse(JSON.stringify(up));
     const keys = Object.keys(clean);
-    for(let i = 0; i < keys.length; i += 400){
-      const part = {}; keys.slice(i, i + 400).forEach(k => part[k] = clean[k]);
-      await CI.db.ref().update(part);
-      info.innerHTML = `<p class="muted">${t('c.loading')} ${Math.min(100, Math.round((i + 400) * 100 / keys.length))}%</p>`;
+    // Tartib muhim: avval guruh va testlar (egasi aniqlansin), keyin ularga bog'liq yozuvlar
+    const rank = k => /^(groups|tests|words)\//.test(k) ? 0 : 1;
+    keys.sort((a, b) => rank(a) - rank(b));
+    const failed = [];
+    for(let i = 0; i < keys.length; i += 300){
+      const slice = keys.slice(i, i + 300), part = {}; slice.forEach(k => part[k] = clean[k]);
+      try{ await CI.db.ref().update(part); }
+      catch(e){ for(const k of slice){ try{ await CI.db.ref(k).set(clean[k]); }catch(e2){ failed.push(k); } } }
+      info.innerHTML = `<p class="muted">${t('c.loading')} ${Math.min(100, Math.round((i + 300) * 100 / keys.length))}%</p>`;
     }
+    if(failed.length) console.warn('Import: rad etilgan yozuvlar', failed);
+    A._failed = failed;
     CI.log('backup.importOld', { note: `tests ${nT}, groups ${nG}, students ${nS}, words ${nW}, hanzi ${nA}` });
-    info.innerHTML = `<div class="note green">✓ ${t('ad.importDone', {t: nT, g: nG, s: nS, w: nW, a: nA})}</div>`;
+    info.innerHTML = `<div class="note green">✓ ${t('ad.importDone', {t: nT, g: nG, s: nS, w: nW, a: nA})}</div>` +
+      (A._failed.length ? `<div class="note">⚠️ ${t('ad.importFailed', {n: A._failed.length})}<br><span class="code" style="display:block;white-space:pre-wrap;max-height:160px;overflow:auto">${A._failed.slice(0, 50).map(esc).join('\n')}</span></div>` : '');
   }catch(e){ info.innerHTML = `<div class="note red">${CI.errMsg(e)}</div>`; }
 };
 })();
