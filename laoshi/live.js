@@ -7,7 +7,7 @@ const CI = window.CI, L = window.L, t = (k,v) => CI.t(k,v), esc = CI.esc, $ = CI
 const V = L.live = {};
 let D = null;    // {tid, ses, res, keys, refs, sub}
 
-V.detach = () => { if(D){ D.refs.forEach(r => r.off()); clearInterval(D.timer); } D = null; };
+V.detach = () => { if(D){ D.refs.forEach(r => r.off()); clearInterval(D.timer); clearInterval(D.poll); } D = null; };
 V.render = () => {
   const tid = L.liveId;
   if(!tid || !L.testById(tid)) return pick();
@@ -20,6 +20,19 @@ V.render = () => {
     D.refs.push(s, r);
     CI.db.ref('testKeys/' + tid).once('value').then(v => { D.keys = v.val() || {}; autoGrade(); draw(); }, () => {});
     D.timer = setInterval(() => { if(D && D.sub === 'live') drawTable(); }, 15000);
+    /* Zaxira yangilanish (jonli ulanish yetib kelmaydigan tarmoqlar uchun) */
+    let busy = false;
+    D.poll = setInterval(async () => {
+      if(busy || document.hidden || !D || D.tid !== tid || L.view !== 'live') return; busy = true;
+      try{
+        const [ss, rr] = await Promise.all([CI.restGet('sessions/' + tid), CI.restGet('results/' + tid)]);
+        if(!D || D.tid !== tid) return;
+        let ch = false;
+        if(CI.stable(ss || {}) !== CI.stable(D.ses)){ D.ses = ss || {}; D.loaded = true; ch = true; autoGrade(); }
+        if(CI.stable(rr || {}) !== CI.stable(D.res)){ D.res = rr || {}; ch = true; }
+        if(ch) draw();
+      }catch(e){} finally{ busy = false; }
+    }, 8000);
   }
   draw();
 };

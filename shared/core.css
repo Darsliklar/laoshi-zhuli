@@ -181,3 +181,8 @@ footer.ci-foot a{color:inherit}
 
 @media print{ .topbar,.no-print,.toasts{display:none!important} body{background:#fff} .card{box-shadow:none;border-color:#ccc} .ci-bg{display:none} }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+
+/* jonli ulanish belgisi */
+.ci-conn{display:inline-block;width:10px;height:10px;border-radius:50%;background:#B9BFC6;flex:none}
+.ci-conn.on{background:var(--jade);box-shadow:0 0 0 3px var(--jade-soft)}
+.ci-conn.off{background:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}

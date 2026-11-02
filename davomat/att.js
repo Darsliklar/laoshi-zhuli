@@ -36,7 +36,7 @@ function shell(inner){
     </div><div id="att-body">${inner||''}</div>`;
 }
 A.go = v => { A.view = v; CI.ls.set('att.view', v); draw(); };
-function detach(){ A.refs.forEach(r => r.off()); A.refs = []; }
+function detach(){ A.refs.forEach(r => r.off()); A.refs = []; clearInterval(A.poll); }
 
 function draw(){
   if(!CI.profile) return;
@@ -68,6 +68,21 @@ function attachLesson(){
   m.on('value', s => { A.meta = s.val(); A.loaded = true; drawLesson(); });
   r.on('value', s => { A.rec = s.val() || {}; drawLesson(); if(P) presDraw(); });
   A.refs.push(m, r); A.attachedFor = A.gid + '|' + keyOf();
+  startPoll(base);
+}
+/* Zaxira yangilanish: dars ochiq (yoki QR ekrani ochiq) bo'lsa, har 4 soniyada ro'yxatni oddiy so'rov bilan tekshiramiz.
+   Jonli ulanish ishlasa ham zarari yo'q — o'zgarish bo'lmasa hech narsa qayta chizilmaydi. */
+function startPoll(base){
+  clearInterval(A.poll); let busy = false;
+  A.poll = setInterval(async () => {
+    if(busy || document.hidden || A.view !== 'lesson' || !(P || (A.meta && A.meta.open))) return;
+    if(A.attachedFor !== A.gid + '|' + keyOf()) return;
+    busy = true;
+    try{
+      const v = (await CI.restGet(base + '/rec')) || {};
+      if(A.attachedFor === A.gid + '|' + keyOf() && CI.stable(v) !== CI.stable(A.rec)){ A.rec = v; drawLesson(); if(P) presDraw(); }
+    }catch(e){} finally{ busy = false; }
+  }, 4000);
 }
 
 function drawLesson(){

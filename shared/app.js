@@ -150,6 +150,26 @@ CI.initFirebase = () => {
   return true;
 };
 CI.serverNow = () => firebase.database.ServerValue.TIMESTAMP;
+/* Jonli ulanishdan mustaqil o'qish (REST). Ba'zi tarmoqlarda (VPN, antivirus, proksi) Firebase'ning doimiy ulanishi
+   yozishni o'tkazadi, lekin jonli yangilanishlarni yetkazmaydi — shunda panellar ma'lumotni shu yo'l bilan ham tekshiradi. */
+CI.restGet = async path => {
+  const base = CFG.emulator ? `http://${CFG.emulator.host || '127.0.0.1'}:${CFG.emulator.dbPort || 9000}` : CFG.firebase.databaseURL.replace(/\/+$/, '');
+  const qs = []; if(CFG.emulator) qs.push('ns=' + (CFG.firebase.projectId + '-default-rtdb'));
+  if(CI.user) qs.push('auth=' + encodeURIComponent(await CI.user.getIdToken()));
+  const r = await fetch(base + '/' + path + '.json' + (qs.length ? '?' + qs.join('&') : ''), { cache: 'no-store' });
+  if(!r.ok) throw new Error('REST ' + r.status);
+  return r.json();
+};
+/* Kalitlar tartibidan qat'i nazar taqqoslash uchun */
+CI.stable = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, kk) => (o[kk] = x[kk], o), {}) : x);
+/* Ulanish holati belgisi (sarlavhada) */
+CI.connected = null;
+CI.watchConnection = () => {
+  if(CI._connW || !CI.db) return; CI._connW = true;
+  CI.db.ref('.info/connected').on('value', s => { CI.connected = !!s.val(); CI.$$('.ci-conn').forEach(el => upd(el)); });
+  const upd = el => { el.className = 'ci-conn ' + (CI.connected ? 'on' : 'off'); el.title = CI.t(CI.connected ? 'conn.on' : 'conn.off'); };
+};
+CI.connBadge = () => { CI.watchConnection(); return `<span class="ci-conn ${CI.connected ? 'on' : CI.connected === false ? 'off' : ''}" title="${CI.esc(CI.t(CI.connected ? 'conn.on' : 'conn.off'))}"></span>`; };
 CI.errMsg = e => {
   const c = (e && (e.code || e.message) || '') + '';
   if(/PERMISSION_DENIED|permission/i.test(c)) return CI.t('c.denied');
@@ -188,6 +208,7 @@ uz:{
   'auth.e.net':"Internet aloqasini tekshiring.", 'auth.e.fields':"Barcha maydonlarni to'ldiring.",
   'auth.changePass':'Parolni almashtirish', 'auth.curPass':'Joriy parol', 'auth.newPass':'Yangi parol', 'auth.newPass2':'Yangi parol (takror)',
   'auth.e.mismatch':'Yangi parollar mos emas.', 'auth.passChanged':'Parol almashtirildi.',
+  'conn.on':'Jonli ulanish bor', 'conn.off':"Jonli ulanish yo'q — ma'lumot har bir necha soniyada yangilanadi",
   'setup.title':'Firebase sozlanmagan', 'setup.text':"Sayt ishlashi uchun <code>config.js</code> fayliga Firebase sozlamalarini yozing. Qadam-baqadam ko'rsatma: <b>QOLLANMA.md → 2-bo'lim</b>."
 },
 ru:{
@@ -203,6 +224,7 @@ ru:{
   'auth.e.net':'Проверьте подключение к интернету.', 'auth.e.fields':'Заполните все поля.',
   'auth.changePass':'Сменить пароль', 'auth.curPass':'Текущий пароль', 'auth.newPass':'Новый пароль', 'auth.newPass2':'Новый пароль (повтор)',
   'auth.e.mismatch':'Новые пароли не совпадают.', 'auth.passChanged':'Пароль изменён.',
+  'conn.on':'Живое соединение есть', 'conn.off':'Нет живого соединения — данные обновляются каждые несколько секунд',
   'setup.title':'Firebase не настроен', 'setup.text':'Чтобы сайт заработал, впишите настройки Firebase в файл <code>config.js</code>. Пошаговая инструкция: <b>QOLLANMA.md → раздел 2</b>.'
 },
 en:{
@@ -218,6 +240,7 @@ en:{
   'auth.e.net':'Check your internet connection.', 'auth.e.fields':'Please fill in all fields.',
   'auth.changePass':'Change password', 'auth.curPass':'Current password', 'auth.newPass':'New password', 'auth.newPass2':'New password (again)',
   'auth.e.mismatch':'The new passwords do not match.', 'auth.passChanged':'Password changed.',
+  'conn.on':'Live connection active', 'conn.off':'No live connection — data refreshes every few seconds',
   'setup.title':'Firebase is not configured', 'setup.text':'To make the site work, put your Firebase settings into <code>config.js</code>. Step-by-step guide: <b>QOLLANMA.md → section 2</b>.'
 },
 zh:{
@@ -233,6 +256,7 @@ zh:{
   'auth.e.net':'请检查网络连接。', 'auth.e.fields':'请填写所有字段。',
   'auth.changePass':'修改密码', 'auth.curPass':'当前密码', 'auth.newPass':'新密码', 'auth.newPass2':'再次输入新密码',
   'auth.e.mismatch':'两次输入的新密码不一致。', 'auth.passChanged':'密码已修改。',
+  'conn.on':'实时连接正常', 'conn.off':'没有实时连接——数据每隔几秒刷新一次',
   'setup.title':'尚未配置 Firebase', 'setup.text':'请在 <code>config.js</code> 文件中填写 Firebase 设置，网站才能运行。详细步骤见 <b>QOLLANMA.md 第 2 节</b>。'
 }
 });
@@ -324,7 +348,7 @@ CI.requireTeacher = (el, ok, opts) => {
   document.addEventListener('ci:lang', () => { if(!CI.user && CI.$('#a-go')) showLogin(); });
 };
 CI.logout = () => { CI.log('auth.logout'); return CI.auth.signOut(); };
-CI.userMenu = extra => CI.user ? CI.menuHtml('ci-um', [
+CI.userMenu = extra => CI.user ? CI.connBadge() + CI.menuHtml('ci-um', [
   {label: '👤 ' + CI.esc(CI.myName()), fn: ''},
   {label: '🔑 ' + CI.t('auth.changePass'), fn: 'CI.changePassword()'}].concat(extra || [], [
   {label: '🚪 ' + CI.t('auth.logout'), fn: 'CI.logout()', danger: true}])) : '';
