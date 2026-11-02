@@ -6,13 +6,13 @@
    ============================================================================ */
 window.CI_CONFIG = {
   firebase: {
-    apiKey: "",
-    authDomain: "",
-    databaseURL: "",        // ← muhim! Realtime Database manzili (https://....firebasedatabase.app yoki ...firebaseio.com)
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
+    apiKey: "AIzaSyAfTbwtGd7JFqSEAGoxHn2uXivwMCfJ94Y",
+    authDomain: "laoshi-zhuli.firebaseapp.com",
+    databaseURL: "https://laoshi-zhuli-default-rtdb.firebaseio.com",        // ← muhim! Realtime Database manzili (https://....firebasedatabase.app yoki ...firebaseio.com)
+    projectId: "laoshi-zhuli",
+    storageBucket: "laoshi-zhuli.firebasestorage.app",
+    messagingSenderId: "830119962176",
+    appId: "1:830119962176:web:e3c68f7e7956fec97ce1a5"
   },
 
   // Google Apps Script Web App manzili (apps-script/Code.gs). Bepul. U quyidagilar uchun kerak:
