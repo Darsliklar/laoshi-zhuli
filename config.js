@@ -19,7 +19,7 @@ window.CI_CONFIG = {
   //  • testlarni serverda baholash (to'g'ri javoblar o'quvchilardan yashirin turadi, natija darhol chiqadi);
   //  • admin uchun "parolni 111111 ga tiklash" tugmasi.
   // Bo'sh qolsa ham sayt ishlaydi: natijalarni laoshi o'z panelida "Baholash" tugmasi bilan hisoblaydi.
-  appsScriptUrl: "",
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycbxFjYh373DF1Xoob8W8O0phN4nVinIlACTupiUCAJhO_d7ZV-ghMbMdvubxc1U2WMTN/exec",
 
   // Institut nomi (sarlavhada). Bo'sh qoldirsangiz — standart nom.
   institute: {
