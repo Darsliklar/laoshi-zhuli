@@ -194,7 +194,7 @@ A.download = async () => {
 };
 A.doRestore = async () => {
   if(!await CI.confirm(t('ad.restoreQ'), {danger: true})) return;
-  try{ const up = {}; NODES.forEach(n => { if(A._bk[n]) up[n] = A._bk[n]; }); await CI.db.ref().update(up); CI.log('backup.restore'); CI.toast(t('ad.restored'), 'ok'); }
+  try{ const up = {}; NODES.forEach(n => { if(A._bk[n]) up[n] = A._bk[n]; }); await CI.db.ref().update(JSON.parse(JSON.stringify(up))); CI.log('backup.restore'); CI.toast(t('ad.restored'), 'ok'); }
   catch(e){ CI.toast(CI.errMsg(e), 'err'); }
 };
 /* Eski "Laoshi Test" zaxirasidan: testlar, Hanzi guruhlari (kodlar saqlanadi), so'zlar, Hanzi topshiriqlari.
@@ -210,7 +210,8 @@ A.doImportOld = async () => {
     // testlar
     Object.entries(d.tests || {}).forEach(([id, x]) => {
       const qs = {}, keys = {}, order = [];
-      (x.questions || []).forEach((q, i) => { const k = 'q' + String(i).padStart(3, '0'); order.push(k); qs[k] = { type: 'single', text: q.q, options: q.options, points: 1 }; keys[k] = { c: q.correct }; });
+      (x.questions || []).forEach((q, i) => { if(!q) return; const k = 'q' + String(i).padStart(3, '0'); order.push(k);
+        qs[k] = { type: 'single', text: q.q || '', options: q.options || [], points: 1 }; keys[k] = q.correct != null ? { c: q.correct } : {}; });
       const [ou, on] = owner(x.ownerUid);
       up['tests/' + id] = { title: x.title, ownerUid: ou, ownerName: on, createdAt: x.createdAt || Date.now(), status: x.closed ? 'closed' : 'open', startAt: x.startAt || null, endAt: x.endAt || null,
         shared: x.shared || null, order, questions: qs, settings: Object.assign({}, { timeLimit: x.timeLimit || 20, attempts: x.attemptLimit || 1, shuffleQ: !!x.shuffleQ, shuffleOpt: !!x.shuffleO,
@@ -242,7 +243,15 @@ A.doImportOld = async () => {
       up['testKeys/' + aid] = { answers: keys, pin: L.newPin() }; nA++;
     });
     info.innerHTML = `<p class="muted">${t('c.loading')}</p>`;
-    await CI.db.ref().update(up);
+    // Eski yozuvlarda ba'zi maydonlar yo'q bo'ladi (masalan, yozish savolida pinyin) — Firebase "undefined" ni qabul qilmaydi,
+    // JSON orqali o'tkazib, bunday maydonlarni olib tashlaymiz. Juda katta bazani bo'laklab yozamiz.
+    const clean = JSON.parse(JSON.stringify(up));
+    const keys = Object.keys(clean);
+    for(let i = 0; i < keys.length; i += 400){
+      const part = {}; keys.slice(i, i + 400).forEach(k => part[k] = clean[k]);
+      await CI.db.ref().update(part);
+      info.innerHTML = `<p class="muted">${t('c.loading')} ${Math.min(100, Math.round((i + 400) * 100 / keys.length))}%</p>`;
+    }
     CI.log('backup.importOld', { note: `tests ${nT}, groups ${nG}, students ${nS}, words ${nW}, hanzi ${nA}` });
     info.innerHTML = `<div class="note green">✓ ${t('ad.importDone', {t: nT, g: nG, s: nS, w: nW, a: nA})}</div>`;
   }catch(e){ info.innerHTML = `<div class="note red">${CI.errMsg(e)}</div>`; }
