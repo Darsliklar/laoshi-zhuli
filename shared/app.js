@@ -120,7 +120,21 @@ CI.prompt = (title, def, opts) => new Promise(res => {
 CI.menuHtml = (id, items) => `<div class="menu"><button class="btn-ghost btn-sm menu-btn" onclick="CI.toggleMenu(event,'${id}')" aria-label="${CI.t('c.more')}">⋯</button>
   <div class="menu-pop hidden" id="${id}">${items.filter(Boolean).map(it => `<button class="menu-item ${it.danger?'danger':''}" onclick="CI.closeMenus();${CI.esc(it.fn)}">${it.label}</button>`).join('')}</div></div>`;
 CI.closeMenus = () => CI.$$('.menu-pop').forEach(p => p.classList.add('hidden'));
-CI.toggleMenu = (ev, id) => { ev.stopPropagation(); const el = document.getElementById(id); const was = el && !el.classList.contains('hidden'); CI.closeMenus(); if(el && !was) el.classList.remove('hidden'); };
+/* Menyu ekranga nisbatan (position:fixed) ochiladi — jadval yoki kartochka ichida kesilib qolmasligi uchun */
+CI.toggleMenu = (ev, id) => {
+  ev.stopPropagation();
+  const el = document.getElementById(id); if(!el) return;
+  const was = !el.classList.contains('hidden'); CI.closeMenus(); if(was) return;
+  el.classList.remove('hidden');
+  const r = ev.currentTarget.getBoundingClientRect();
+  el.style.position = 'fixed'; el.style.left = 'auto'; el.style.bottom = 'auto';
+  el.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+  const h = el.offsetHeight, below = window.innerHeight - r.bottom;
+  el.style.top = (below < h + 12 && r.top > h + 12 ? r.top - h - 6 : r.bottom + 6) + 'px';
+  if(el.getBoundingClientRect().left < 8){ el.style.right = 'auto'; el.style.left = '8px'; }
+};
+window.addEventListener('scroll', () => CI.closeMenus(), true);
+window.addEventListener('resize', () => CI.closeMenus());
 document.addEventListener('click', e => { if(!e.target.closest('.menu')) CI.closeMenus(); });
 
 /* Sarlavha: logo + nom + til + (foydalanuvchi) */
