@@ -57,6 +57,8 @@ function stateOf(s){
 const ST_PILL = { active: ['p-green','● '], locked: ['p-red','🔒 '], done: ['p-blue','✓ '], timeup: ['p-yellow','⏰ '], idle: ['p-gray','… '] };
 const stPill = k => CI.pill(ST_PILL[k][0], ST_PILL[k][1] + t('lv.s.' + k));
 const ansCount = s => Object.keys(s.answers || {}).length;
+/* Vaqt tugagach baholangan sessiyada finishedAt = baholash payti (server vaqti) — haqiqiy tugash muddatdan keyin bo'lmaydi */
+const endAt = s => s.finishedAt && s.deadline ? Math.min(s.finishedAt, s.deadline) : s.finishedAt;
 function dur(a, b){ if(!a || !b) return '—'; const m = Math.round((b - a) / 60000); return m < 60 ? m + ' ' + t('c.min') : Math.floor(m/60) + ':' + String(m%60).padStart(2,'0'); }
 
 /* ---------------------------------------------------------------- chizish */
@@ -112,7 +114,7 @@ function drawTable(){
         <td>${stPill(k)}</td>
         <td><div class="flex" style="gap:6px;flex-wrap:nowrap"><div class="bar" style="width:80px"><i style="width:${n ? a*100/n : 0}%"></i></div><span class="muted">${a}/${n}</span></div></td>
         <td>${s.violations ? `<b style="color:var(--red)">${s.violations}</b>` : '<span class="muted">0</span>'}</td>
-        <td class="muted nowrap" style="font-size:12.5px">${CI.fmtHM(s.startedAt)}${s.finishedAt ? ' → ' + CI.fmtHM(s.finishedAt) + ' (' + dur(s.startedAt, s.finishedAt) + ')' : left != null ? ' · ⏳ ' + left + ' ' + t('c.min') : ''}</td>
+        <td class="muted nowrap" style="font-size:12.5px">${CI.fmtHM(s.startedAt)}${s.finishedAt ? ' → ' + CI.fmtHM(endAt(s)) + ' (' + dur(s.startedAt, endAt(s)) + ')' : left != null ? ' · ⏳ ' + left + ' ' + t('c.min') : ''}</td>
         <td class="nowrap">${r ? `<b>${r.score}/${r.maxScore}</b> <span class="muted">${r.percent}%${r.grade != null ? ' · ' + esc(r.grade) : ''}</span>${r.pending ? ' ' + CI.pill('p-yellow', '✍️ ' + r.pending) : ''}`
           : k === 'done' || k === 'timeup' ? `<span class="muted">${t('lv.notGraded')}</span>` : `<span class="muted">—</span>`}</td>
         <td class="nowrap" style="text-align:right">
@@ -131,7 +133,7 @@ V.unlock = sid => CI.db.ref('sessions/' + D.tid + '/' + sid).update({ status: 'a
   .then(() => CI.log('test.unlock', { targetName: D.ses[sid].name, testId: D.tid, note: test().title }), e => CI.toast(CI.errMsg(e), 'err'));
 V.unlockAll = () => { const up = {}; Object.entries(D.ses).forEach(([sid,s]) => { if(s.status === 'locked') up[sid + '/status'] = 'active'; });
   CI.db.ref('sessions/' + D.tid).update(up).catch(e => CI.toast(CI.errMsg(e), 'err')); };
-V.forceFinish = sid => CI.db.ref('sessions/' + D.tid + '/' + sid).update({ status: 'done', finishedAt: Date.now() }).catch(e => CI.toast(CI.errMsg(e), 'err'));
+V.forceFinish = sid => CI.db.ref('sessions/' + D.tid + '/' + sid).update({ status: 'done', finishedAt: CI.serverNow() }).catch(e => CI.toast(CI.errMsg(e), 'err'));
 V.addTime = (sid, m) => { const s = D.ses[sid]; const base = Math.max(s.deadline || Date.now(), Date.now());
   CI.db.ref('sessions/' + D.tid + '/' + sid).update({ deadline: base + m*60000, status: s.status === 'done' ? 'done' : 'active' }).catch(e => CI.toast(CI.errMsg(e), 'err')); };
 V.retake = async sid => {
@@ -156,15 +158,20 @@ function gradeOne(sid){
 }
 V.gradeAll = (force) => {
   if(!D.keys) return CI.toast(t('c.loading'), 'err');
-  const up = {}; let n = 0;
+  const jobs = [];
   Object.entries(D.ses).forEach(([sid,s]) => { const k = stateOf(s);
     if(k !== 'done' && k !== 'timeup') return;
-    if(!force && D.res[sid]) return;
-    up['results/' + D.tid + '/' + sid] = gradeOne(sid); n++;
-    if(k === 'timeup') { up['sessions/' + D.tid + '/' + sid + '/status'] = 'done'; up['sessions/' + D.tid + '/' + sid + '/finishedAt'] = s.deadline; }
+    if(!force && D.res[sid] && k === 'done') return;
+    const up = { ['results/' + D.tid + '/' + sid]: gradeOne(sid) };
+    /* Qoidalar finishedAt'ga faqat server vaqtini qabul qiladi (deadline emas) */
+    if(k === 'timeup'){ up['sessions/' + D.tid + '/' + sid + '/status'] = 'done'; if(!s.finishedAt) up['sessions/' + D.tid + '/' + sid + '/finishedAt'] = CI.serverNow(); }
+    /* Har o'quvchi alohida — bittasi rad etilsa, qolganlari baribir saqlanadi */
+    jobs.push(CI.db.ref().update(up));
   });
-  if(!n){ if(force) CI.toast(t('lv.nothingToGrade')); return; }
-  CI.db.ref().update(up).then(() => { if(force) CI.toast(t('lv.graded', {n}), 'ok'); }, e => CI.toast(CI.errMsg(e), 'err'));
+  if(!jobs.length){ if(force) CI.toast(t('lv.nothingToGrade')); return; }
+  Promise.allSettled(jobs).then(rs => { const bad = rs.filter(r => r.status === 'rejected');
+    if(bad.length){ if(force || !V._errShown){ V._errShown = true; CI.toast(CI.errMsg(bad[0].reason), 'err'); } }
+    else if(force) CI.toast(t('lv.graded', {n: jobs.length}), 'ok'); });
 };
 /* Yangi tugatganlar avtomatik baholanadi (server bo'lmasa ham, laoshi paneli ochiq turganda) */
 let agT = null;
@@ -252,7 +259,7 @@ V.excel = () => {
   const head = [t('g.student'), '#', t('c.status'), t('lv.start'), t('lv.end'), t('lv.duration'), '⚠️', t('lv.answered'), t('lv.correct'), t('lv.score'), '%', t('st.grade')];
   const list = Object.entries(D.ses).sort((a,b) => String(a[1].name).localeCompare(String(b[1].name)));
   const rows = [head].concat(list.map(([sid,s]) => { const r = D.res[sid] || gradeOne(sid) || {};
-    return [s.name, s.attempt || 1, t('lv.s.' + stateOf(s)), CI.fmtDT(s.startedAt), s.finishedAt ? CI.fmtDT(s.finishedAt) : '', dur(s.startedAt, s.finishedAt),
+    return [s.name, s.attempt || 1, t('lv.s.' + stateOf(s)), CI.fmtDT(s.startedAt), s.finishedAt ? CI.fmtDT(endAt(s)) : '', dur(s.startedAt, endAt(s)),
       s.violations || 0, ansCount(s) + '/' + ids.length, r.correct ?? '', r.score ?? '', r.percent ?? '', r.grade ?? '']; }));
   const qhead = [t('g.student')].concat(ids.map((id, i) => (i+1) + '. ' + L.qPromptText(x.questions[id]).slice(0, 40)));
   const keyRow = [t('st.rightAns')].concat(ids.map(id => keyText(x.questions[id], K[id])));
