@@ -4,7 +4,7 @@ const root = path.join(__dirname, '..');
 const ctx = { window: {}, document: { readyState: 'complete', addEventListener(){}, documentElement: { dataset: {} }, querySelectorAll: () => [], dispatchEvent(){} },
   localStorage: { getItem(){ return null; }, setItem(){} }, location: { search: '' }, navigator: { language: 'uz' }, URLSearchParams, CustomEvent: function(){} , console };
 ctx.window = ctx; ctx.addEventListener = () => {}; vm.createContext(ctx);
-const files = ['shared/i18n.js','shared/modules.js','shared/groups.js','davomat/i18n.js','laoshi/i18n-uz-ru.js','laoshi/i18n-en-zh.js'];
+const files = ['shared/i18n.js','shared/modules.js','shared/groups.js','davomat/i18n.js','davomat/pay.js','laoshi/i18n-uz-ru.js','laoshi/i18n-en-zh.js'];
 vm.runInContext(fs.readFileSync(path.join(root,'shared/i18n.js'),'utf8'), ctx);
 ctx.CI = ctx.window.CI;
 // app.js lug'ati
@@ -18,7 +18,7 @@ const dyn = { 'l.tab.': ['tests','editor','live','groups','words','library','tea
   'set.': ['onLeave.off','onLeave.warn','onLeave.block','onLeave.off.d','onLeave.warn.d','onLeave.block.d','showScore.now','showScore.end','showScore.never','showAnswers.now','showAnswers.end','showAnswers.never','grid.tian','grid.mi'],
   'lv.s.': ['active','locked','done','timeup','idle'], 'lv.sub.': ['live','analysis','review'], 'lv.v.': ['correct','incorrect','unanswered','partial'],
   'ad.kind.': ['test','session','teacher','group','announce'], 'hz.f.': ['hanzi','pinyin','translation'],
-  'a.st.': ['p','l','a','e','none','p1','l1','a1','e1'], 'a.tab.': ['lesson','journal','report','groups'], 'mod.': ['laoshi.t','laoshi.d','davomat.t','davomat.d','doska.t','doska.d','jadval.t','jadval.d'],
+  'a.st.': ['p','l','a','e','none','p1','l1','a1','e1'], 'a.tab.': ['lesson','journal','report','groups','pay'], 'p.st.': ['paid','part','none','free'], 'mod.': ['laoshi.t','laoshi.d','davomat.t','davomat.d','doska.t','doska.d','jadval.t','jadval.d'],
   'tag.': ['test','hanzi','online','qr','offline','board','schedule'] };
 for(const dir of ['shared','davomat','laoshi','index.html']){
   const p = path.join(root, dir); const fl = fs.statSync(p).isDirectory() ? fs.readdirSync(p).filter(x => /\.(js|html)$/.test(x)).map(x => path.join(p,x)) : [p];

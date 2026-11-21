@@ -106,6 +106,30 @@
         }
       }
     },
+    "payments": {
+      ".read": "(auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false)",
+      ".write": "(auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false)",
+      "$month": {
+        ".validate": "$month.matches(/^[0-9]{4}-[0-9]{2}$/)",
+        "$gid": {
+          "_fee": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "$sid": {
+            ".validate": "$sid === '_fee' || !newData.exists() || (newData.child('st').isString() && newData.child('st').val().matches(/^(paid|part|none|free)$/) && (!newData.child('amt').exists() || (newData.child('amt').isNumber() && newData.child('amt').val() >= 0)) && (!newData.child('note').exists() || (newData.child('note').isString() && newData.child('note').val().length <= 1000)) && (!newData.child('date').exists() || newData.child('date').val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)))"
+          }
+        }
+      }
+    },
+    "payCfg": {
+      ".read": "(auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false)",
+      ".write": "(auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false)",
+      "groups": {
+        "$gid": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        }
+      }
+    },
     "attTokens": {
       "$gid": {
         ".read": "((auth != null && root.child('teachers').child(auth.uid).exists() && root.child('teachers').child(auth.uid).child('active').val() !== false) && (root.child('groups').child($gid).child('ownerUid').val() === auth.uid || root.child('groups').child($gid).child('members').child(auth.uid).val() === true || (auth != null && root.child('teachers').child(auth.uid).child('role').val() === 'admin' && root.child('teachers').child(auth.uid).child('active').val() !== false)))",

@@ -154,6 +154,26 @@ rules = {
         }
       }
     },
+    # -------------------------------------------------- to'lovlar (faqat administrator)
+    "payments": {
+      ".read": ADM, ".write": ADM,
+      "$month": {
+        ".validate": "$month.matches(/^[0-9]{4}-[0-9]{2}$/)",
+        "$gid": {
+          "_fee": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "$sid": {
+            ".validate": ("$sid === '_fee' || !newData.exists() || (newData.child('st').isString() && newData.child('st').val().matches(/^(paid|part|none|free)$/) "
+                          "&& (!newData.child('amt').exists() || (newData.child('amt').isNumber() && newData.child('amt').val() >= 0)) "
+                          "&& (!newData.child('note').exists() || (newData.child('note').isString() && newData.child('note').val().length <= 1000)) "
+                          "&& (!newData.child('date').exists() || newData.child('date').val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)))")
+          }
+        }
+      }
+    },
+    "payCfg": {
+      ".read": ADM, ".write": ADM,
+      "groups": { "$gid": { ".validate": "newData.isNumber() && newData.val() >= 0" } }
+    },
     "attTokens": {
       "$gid": { ".read": MG("$gid"), ".write": MG("$gid") }
     },

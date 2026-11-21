@@ -193,6 +193,26 @@ Nega aldab bo'lmaydi:
 **📒 Jurnal**: oy bo'yicha jadval (o'quvchi × sana), har bir katakni bosib o'zgartirish, davomat foizi, **⬇ Excel** (izohlar alohida varaqda).
 **📊 Hisobot**: tanlangan davr uchun barcha guruhlar bo'yicha statistika va davomati 75% dan past o'quvchilar ro'yxati.
 
+### 💰 To'lovlar (faqat administrator)
+
+Bu yorliqni **faqat administrator** ko'radi. Oddiy laoshilar ham, o'quvchilar ham ko'rmaydi: Firebase qoidalari bu ma'lumotni
+boshqalarga umuman bermaydi (shuning uchun `database.rules.json` ni yangilash shart — pastga qarang).
+
+1. **Oy** — ← va → tugmalari bilan tanlanadi. Har bir oy **alohida** saqlanadi.
+2. **Guruh** — *Barcha guruhlar* tanlansa, umumiy jadval chiqadi: har bir guruhda nechta o'quvchi to'lagan, qisman to'lagan,
+   to'lamagan, ozod; tushgan summa va qarz. Guruh qatorini bosing — o'sha guruh ochiladi.
+3. Guruh ichida avval **Oylik to'lov** miqdorini kiriting → **Saqlash**. U shu oy va keyingi oylarga qo'llanadi;
+   o'tgan oylardagi narx o'zgarmaydi.
+4. Har bir o'quvchi yonida:
+   - **✓ To'ladi** — bir bosishda "to'lagan" (oylik to'lov miqdori, bugungi sana);
+   - **📝** — faqat izoh qo'shish (masalan, "otasi bilan gaplashildi, 1-dekabrgacha");
+   - **✎ Tahrirlash** — holat (*To'lagan / Qisman / To'lamagan / Ozod*), miqdor, to'lov sanasi va izoh.
+     Miqdor yozilganda holat o'zi tanlanadi (to'liq → to'lagan, kamroq → qisman). Yozuvni o'chirish ham shu yerda.
+5. Izoh ostida kim va qachon kiritgani ko'rinadi.
+6. **Faqat to'lamaganlar** — ro'yxatda faqat qarzdorlar qoladi. **⬇ Excel** — oy hisobi (umumiy varaq + har bir guruh alohida varaqda).
+
+Eslatma yuborish hozircha yo'q.
+
 ## 10. O'quvchi uchun
 
 - **Test**: laoshi bergan havola yoki QR → (guruhli bo'lsa) shaxsiy kod → **Boshlash**. Javoblar har bosishda saqlanadi.

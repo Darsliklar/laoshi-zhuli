@@ -31,16 +31,18 @@ document.addEventListener('ci:lang', () => { if(CI.user && CI.profile) draw(); }
 function shell(inner){
   return CI.topbar({ title: t('a.title'), right: CI.userMenu() }) + `
     <div class="tabs no-print">
-      ${[['lesson','✅'],['journal','📒'],['report','📊'],['groups','👥']].map(([v,i]) =>
+      ${[['lesson','✅'],['journal','📒'],['report','📊'],['groups','👥']].concat(CI.isAdmin() ? [['pay','💰']] : []).map(([v,i]) =>
         `<button class="tab ${A.view===v?'on':''}" onclick="ATT.go('${v}')">${i} ${t('a.tab.'+v)}</button>`).join('')}
     </div><div id="att-body">${inner||''}</div>`;
 }
 A.go = v => { A.view = v; CI.ls.set('att.view', v); draw(); };
 function detach(){ A.refs.forEach(r => r.off()); A.refs = []; clearInterval(A.poll); }
+A.shell = shell; A.detach = detach;   // To'lovlar bo'limi (pay.js) uchun
 
 function draw(){
   if(!CI.profile) return;
   if(A.view === 'groups'){ detach(); app.innerHTML = shell(); G.renderManager($('#att-body')); return; }
+  if(A.view === 'pay'){ if(CI.isAdmin() && A.drawPay) return A.drawPay(); A.view = 'lesson'; }
   if(A.view === 'journal') return drawJournal();
   if(A.view === 'report') return drawReport();
   drawLesson();

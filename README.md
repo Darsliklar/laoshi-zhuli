@@ -5,7 +5,7 @@
 | Bo'lim | Papka | Nima qiladi | Ma'lumot qayerda |
 |---|---|---|---|
 | 考 **Testlar va Hanzi** | `laoshi/` | 9 turdagi savol (bitta/ko'p javob, to'g'ri-noto'g'ri, qisqa javob, ieroglif yozish, ieroglif kiritish, pinyin, tarjima, diktant), tayyor sozlamalar, antichit, jonli natijalar, o'quvchi portali | Firebase |
-| ✓ **Davomat** | `davomat/` | O'quvchi aylanuvchi QR kodni skanerlab o'zini belgilaydi yoki laoshi qo'lda kiritadi; oylik jurnal, hisobot, Excel | Firebase |
+| ✓ **Davomat** | `davomat/` | O'quvchi aylanuvchi QR kodni skanerlab o'zini belgilaydi yoki laoshi qo'lda kiritadi; oylik jurnal, hisobot, Excel. **💰 To'lovlar** (faqat admin): har oy alohida, guruhlar kesimida, izoh bilan | Firebase |
 | 板 **Interaktiv doska** | `doska/` | TeachBoard Studio — dars doskasi, PDF/PPTX ustida yozish, musiqa, qo'l harakati bilan boshqarish | Brauzerning o'zida |
 | 表 **Dars jadvali** | `jadval/` | Smart Schedule Builder — avtomatik dars jadvali, almashtirishlar, imtihonlar | Brauzerning o'zida (ixtiyoriy Apps Script) |
 
@@ -32,7 +32,7 @@ database.rules.json     Firebase xavfsizlik qoidalari (tools/build-rules.py yara
 shared/                 umumiy: til tizimi (i18n.js), dizayn (core.css), Firebase/kirish (app.js),
                         guruhlar va o'quvchi kodlari (groups.js), bo'limlar ro'yxati (modules.js), logo
 laoshi/                 Testlar va Hanzi (core, editor, live, student, hanzi, admin, grade, lug'atlar)
-davomat/                Davomat
+davomat/                Davomat (att.js) va To'lovlar — faqat admin (pay.js)
 doska/                  TeachBoard Studio (bitta fayl, ~30 MB, xitoy tili qo'shilgan)
 jadval/                 Smart Schedule Builder (tayyor build)
 apps-script/Code.gs     bepul server: baholash + parolni tiklash (tools/build-gas.py yaratadi)
